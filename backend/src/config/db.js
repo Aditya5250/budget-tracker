@@ -8,8 +8,4 @@ const pool = new Pool({
     : false,
 });
 
-pool.on("connect", () => {
-  console.log("✅ Database connected");
-});
-
 export default pool;
