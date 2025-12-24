@@ -1,0 +1,143 @@
+.auth-page {
+  
+  min-height: 100vh;
+  padding-top: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.auth-page h2 {
+  margin-bottom: 10px;
+}
+
+.auth-page input {
+  width: 280px;
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+}
+
+.auth-page button {
+  margin-top: 10px;
+  width: 280px;
+  padding: 10px;
+  border-radius: 6px;
+  border: none;
+  background: #3b82f6;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.auth-page button:hover {
+  background: #2563eb;
+}
+
+.error {
+  color: #f87171;
+  font-size: 0.9rem;
+}
+
+/* ===== AUTH LAYOUT ===== */
+
+.auth-layout {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  background: radial-gradient(circle at top left, #0f172a, #020617);
+}
+
+/* Left branding panel */
+.auth-brand {
+  padding: 80px 64px;
+  color: #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.auth-brand h1 {
+  font-size: 42px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.auth-brand .tagline {
+  font-size: 18px;
+  color: #94a3b8;
+  margin-bottom: 32px;
+}
+
+.auth-brand .features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.auth-brand .features li {
+  font-size: 16px;
+  margin-bottom: 14px;
+  color: #cbd5f5;
+}
+
+/* Right form panel */
+.auth-page {
+  background: rgba(15, 23, 41, 0.85);
+  backdrop-filter: blur(10px);
+  padding: 48px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 420px;
+  margin: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.auth-page h2 {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+/* Inputs */
+.auth-page input {
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  border-radius: 10px;
+  border: 1px solid #1f2937;
+  background: #020617;
+  color: #e5e7eb;
+}
+
+/* Button */
+.auth-page button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: #3b82f6;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.auth-page button:hover {
+  background: #2563eb;
+}
+.auth-layout{
+  background-image: url("../assets/authbg.jpg");
+  background-size: cover;
+  background-position: center;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .auth-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-brand {
+    display: none;
+  }
+}
