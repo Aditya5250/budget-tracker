@@ -1,63 +1,43 @@
 import express from "express";
 import cors from "cors";
+
 import authRoutes from "./routes/auth.routes.js";
 import categoriesRoutes from "./routes/categories.routes.js";
 import transactionsRoutes from "./routes/transactions.routes.js";
 
 const app = express();
 
-/* =========================
-   ✅ CORS CONFIGURATION
-========================= */
-
-const allowedOrigins = [
-  "http://localhost:5173",   // Vite dev
-  "http://localhost:4173",   // Vite preview
-  "https://budget-tracker-backend-bemr.onrender.com", // backend
-  // 👉 add Vercel frontend URL here after deploy
-];
-
+/**
+ * CORS – works for local, preview, production
+ */
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // allow requests with no origin (Postman, curl)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      return callback(new Error("Not allowed by CORS"));
-    },
+    origin: true,
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-// 🔥 REQUIRED for preflight
-app.options("*", cors());
-
-/* =========================
-   MIDDLEWARES
-========================= */
-
 app.use(express.json());
 
-/* =========================
-   ROUTES
-========================= */
-
+/**
+ * API routes
+ */
 app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoriesRoutes);
 app.use("/api/transactions", transactionsRoutes);
 
-/* =========================
-   HEALTH CHECK
-========================= */
-
+/**
+ * Health check (Render test)
+ */
 app.get("/health", (req, res) => {
   res.json({ status: "OK" });
+});
+
+/**
+ * Safe 404 handler 
+ */
+app.use((req, res) => {
+  res.status(404).json({ message: "Route not found" });
 });
 
 export default app;
