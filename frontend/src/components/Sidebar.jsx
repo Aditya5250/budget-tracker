@@ -11,7 +11,7 @@ export default function Sidebar({ open, onClose }) {
   }
 
   function handleCreateAccount() {
-    logout();
+    
     navigate("/signup");
   }
 

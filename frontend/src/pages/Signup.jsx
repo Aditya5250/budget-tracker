@@ -1,82 +1,87 @@
-import { Link } from 'react-router-dom'
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { signupApi } from '../api/auth.api'
-import '../styles/auth.css'
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { signupApi } from "../api/auth.api";
+import "../styles/auth.css";
 
 export default function Signup() {
-    const [name, setName] = useState('')
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
-    const [error, setError] = useState(null)
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-    const navigate = useNavigate()
+  const navigate = useNavigate();
 
-    async function handleSubmit(e) {
-        e.preventDefault()
-        setError(null)
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-        if (!name || !email || !password) {
-            setError('All fields are required')
-            return
-        }
+    setError(null);
+    setLoading(true);
 
-        try {
-            await signupApi({ name, email, password })
-            navigate('/login')
-        } catch (err) {
-            setError('Signup failed')
-        }
+    try {
+      await signupApi({ name, email, password });
+      navigate("/login");
+    } catch (err) {
+      setError(err?.response?.data?.error || "Signup failed");
+    } finally {
+      setLoading(false);
     }
+  };
 
-    return (
-  <div className="auth-layout">
-    {/* Left branding / value panel */}
-    <div className="auth-brand">
-      <h1>BudgetTracker</h1>
-      <p className="tagline">Build Better Money Habits</p>
+  return (
+    <div className="auth-layout">
+      <div className="auth-brand">
+        <h1>BudgetTracker</h1>
+        <p className="tagline">Build Better Money Habits</p>
 
-      <ul className="features">
-        <li>✓ Track income & expenses</li>
-        <li>✓ Understand spending patterns</li>
-        <li>✓ Stay financially disciplined</li>
-      </ul>
+        <ul className="features">
+          <li>✓ Track income & expenses</li>
+          <li>✓ Understand spending patterns</li>
+          <li>✓ Stay financially disciplined</li>
+        </ul>
+      </div>
+
+      <div className="auth-page">
+        <h2>Create account</h2>
+
+        <form onSubmit={handleSubmit}>
+          <input
+            placeholder="Full name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+
+          {error && <p className="error">{error}</p>}
+
+          <button type="submit" disabled={loading}>
+            {loading ? "Creating..." : "Create account"}
+          </button>
+        </form>
+
+        <p style={{ marginTop: "12px", textAlign: "center" }}>
+          Already have an account?{" "}
+          <Link to="/login" style={{ color: "#3b82f6" }}>
+            Login
+          </Link>
+        </p>
+      </div>
     </div>
-
-    {/* Right signup form */}
-    <div className="auth-page">
-      <h2>Create account</h2>
-
-      <input
-        placeholder="Full name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-
-      <input
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-
-      {error && <p className="error">{error}</p>}
-
-      <button onClick={handleSubmit}>Create account</button>
-
-      <p style={{ marginTop: "12px", textAlign: "center" }}>
-        Already have an account?{" "}
-        <Link to="/login" style={{ color: "#3b82f6" }}>
-          Login
-        </Link>
-      </p>
-    </div>
-  </div>
-)
+  );
 }
