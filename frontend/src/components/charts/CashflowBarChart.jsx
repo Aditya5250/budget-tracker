@@ -51,7 +51,7 @@ export default function CashflowBarChart({ income = 0, expense = 0, currency = "
               {income.toLocaleString("en-IN")}
             </span>
           </div>
-          <div style={{ width: "100%", height: "12px", background: "rgba(255, 255, 255, 0.05)", borderRadius: "var(--radius-full)", overflow: "hidden" }}>
+          <div style={{ width: "100%", height: "12px", background: "var(--chart-track)", borderRadius: "var(--radius-full)", overflow: "hidden" }}>
             <div
               style={{
                 width: `${incomePercent}%`,
@@ -75,7 +75,7 @@ export default function CashflowBarChart({ income = 0, expense = 0, currency = "
               {expense.toLocaleString("en-IN")}
             </span>
           </div>
-          <div style={{ width: "100%", height: "12px", background: "rgba(255, 255, 255, 0.05)", borderRadius: "var(--radius-full)", overflow: "hidden" }}>
+          <div style={{ width: "100%", height: "12px", background: "var(--chart-track)", borderRadius: "var(--radius-full)", overflow: "hidden" }}>
             <div
               style={{
                 width: `${expensePercent}%`,

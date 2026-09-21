@@ -113,17 +113,7 @@ export default function Analytics() {
 
       {/* Highlight Box for Highest Expense */}
       {maxExpense && (
-        <div
-          style={{
-            background: "linear-gradient(135deg, rgba(244, 63, 94, 0.08) 0%, rgba(15, 23, 42, 0.8) 100%)",
-            border: "1px solid rgba(244, 63, 94, 0.25)",
-            borderRadius: "var(--radius-lg)",
-            padding: "20px 24px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
+        <div className="analytics-highlight-card">
           <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
             <div
               style={{
@@ -140,10 +130,12 @@ export default function Analytics() {
               <ArrowUpRight size={22} />
             </div>
             <div>
-              <span style={{ fontSize: "12px", textTransform: "uppercase", color: "#fb7185", fontWeight: 700 }}>
+              <span className="analytics-highlight-badge" style={{ fontSize: "12px", textTransform: "uppercase", color: "var(--expense)", fontWeight: 700 }}>
                 Highest Recorded Single Expense
               </span>
-              <h4 style={{ fontSize: "16px", marginTop: "2px" }}>{maxExpense.note || "Expense"}</h4>
+              <h4 className="analytics-highlight-title" style={{ fontSize: "16px", marginTop: "2px", fontWeight: 700 }}>
+                {maxExpense.note || "Expense"}
+              </h4>
               <span style={{ fontSize: "12px", color: "var(--text-subtle)" }}>
                 Category: {maxExpense.category || "General"} • {new Date(maxExpense.occurred_at).toLocaleDateString()}
               </span>

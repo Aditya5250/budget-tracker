@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import { useToast } from "../context/ToastContext";
 import GoogleSignInButton from "../components/auth/GoogleSignInButton";
 import {
@@ -23,20 +24,11 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "dark");
 
   const { signup } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const { addToast } = useToast();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
-  }, [theme]);
-
-  function toggleTheme() {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
-  }
 
   async function handleSubmit(e) {
     e.preventDefault();

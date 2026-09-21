@@ -12,21 +12,12 @@ import {
   X,
   Wallet,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useTheme } from "../context/ThemeContext";
 
 export default function Sidebar({ open, onClose, onOpenAdvisor }) {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
-  const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "dark");
-
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
-  }, [theme]);
-
-  function toggleTheme() {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
-  }
 
   function handleLogout() {
     logout();

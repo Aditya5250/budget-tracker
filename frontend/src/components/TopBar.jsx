@@ -1,8 +1,10 @@
 import { useAuth } from "../context/AuthContext";
-import { Sparkles, Plus, Menu } from "lucide-react";
+import { useTheme } from "../context/ThemeContext";
+import { Sparkles, Plus, Menu, Sun, Moon } from "lucide-react";
 
 export default function TopBar({ onToggleSidebar, onOpenAiQuickAdd, onOpenAddTx }) {
   const { user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const firstName = user?.name ? user.name.split(" ")[0] : "there";
 
   return (
@@ -23,6 +25,16 @@ export default function TopBar({ onToggleSidebar, onOpenAiQuickAdd, onOpenAddTx 
       </div>
 
       <div className="top-bar-actions">
+        <button
+          type="button"
+          className="icon-btn topbar-theme-btn"
+          onClick={toggleTheme}
+          title={`Switch to ${theme === "dark" ? "Light" : "Dark"} mode`}
+          aria-label="Toggle Theme"
+        >
+          {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+        </button>
+
         <button
           type="button"
           className="btn btn-ai"

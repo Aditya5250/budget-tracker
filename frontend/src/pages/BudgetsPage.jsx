@@ -231,18 +231,13 @@ export default function BudgetsPage() {
 
       {/* AI Budget Recommendations */}
       {recommendations.length > 0 && (
-        <div
-          style={{
-            background: "linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%)",
-            border: "1px solid rgba(129, 140, 248, 0.3)",
-            borderRadius: "var(--radius-xl)",
-            padding: "26px",
-          }}
-        >
+        <div className="ai-budget-rec-box">
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
             <Sparkles size={20} color="#818cf8" />
             <div>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: 700 }}>AI Suggested Category Budgets</h3>
+              <h3 className="ai-budget-rec-title" style={{ fontSize: "1.1rem", fontWeight: 700 }}>
+                AI Suggested Category Budgets
+              </h3>
               <p style={{ fontSize: "12.5px", color: "var(--text-muted)" }}>
                 Calculated using your actual transaction velocity plus recommended healthy buffer limits.
               </p>
@@ -251,27 +246,15 @@ export default function BudgetsPage() {
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "14px" }}>
             {recommendations.map((rec) => (
-              <div
-                key={rec.categoryId}
-                style={{
-                  background: "rgba(255, 255, 255, 0.03)",
-                  border: "1px solid var(--border-subtle)",
-                  borderRadius: "var(--radius-md)",
-                  padding: "16px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  gap: "12px",
-                }}
-              >
+              <div key={rec.categoryId} className="ai-budget-rec-item">
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <strong style={{ fontSize: "14px" }}>{rec.categoryName}</strong>
-                    <span style={{ fontSize: "14px", fontWeight: 800, color: "#818cf8" }}>
+                    <strong style={{ fontSize: "14px", color: "var(--text-main)" }}>{rec.categoryName}</strong>
+                    <span style={{ fontSize: "14px", fontWeight: 800, color: "var(--primary)" }}>
                       ₹{rec.suggestedLimit.toLocaleString("en-IN")}/mo
                     </span>
                   </div>
-                  <p style={{ fontSize: "12px", color: "var(--text-subtle)", marginTop: "6px", lineHeight: 1.4 }}>
+                  <p style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "6px", lineHeight: 1.4 }}>
                     {rec.rationale}
                   </p>
                 </div>

@@ -30,7 +30,7 @@ export default function CategoryDonutChart({ data = [], total = 0, currency = "â
             cy={size / 2}
             r={radius}
             fill="transparent"
-            stroke="rgba(255, 255, 255, 0.05)"
+            stroke="var(--chart-track)"
             strokeWidth={strokeWidth}
           />
 
