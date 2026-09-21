@@ -253,3 +253,137 @@
     padding: 36px 24px;
   }
 }
+
+/* ==========================================================================
+   Google Auth Button & Modern Light Mode Styles for Auth
+   ========================================================================== */
+.btn-google-auth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 18px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-card);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.btn-google-auth:hover:not(:disabled) {
+  background: var(--bg-surface);
+  border-color: #94a3b8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.auth-theme-toggle {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 50;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface-glass);
+  border: 1px solid var(--border-card);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: all var(--transition-fast);
+}
+
+.auth-theme-toggle:hover {
+  color: var(--text-main);
+  border-color: var(--border-focus);
+}
+
+/* Light Theme Auth Overrides */
+[data-theme="light"] .auth-container {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .auth-hero {
+  background: linear-gradient(145deg, #f8fafc 0%, #eef2ff 100%);
+  border-right: 1px solid #e2e8f0;
+}
+
+[data-theme="light"] .auth-hero-tagline {
+  background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+[data-theme="light"] .auth-hero-desc {
+  color: #475569;
+}
+
+[data-theme="light"] .auth-feature-item {
+  color: #1e293b;
+}
+
+[data-theme="light"] .auth-feature-icon {
+  background: rgba(99, 102, 241, 0.12);
+  color: #4f46e5;
+}
+
+[data-theme="light"] .auth-form-title {
+  color: #0f172a;
+}
+
+[data-theme="light"] .auth-form-subtitle {
+  color: #64748b;
+}
+
+[data-theme="light"] .form-label {
+  color: #475569;
+}
+
+[data-theme="light"] .form-input-wrapper input {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+}
+
+[data-theme="light"] .form-input-wrapper input:focus {
+  background: #ffffff;
+  border-color: #6366f1;
+}
+
+[data-theme="light"] .btn-google-auth {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #1e293b;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .btn-google-auth:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .demo-login-divider {
+  color: #94a3b8;
+}
+
+[data-theme="light"] .demo-login-divider::before,
+[data-theme="light"] .demo-login-divider::after {
+  background: #e2e8f0;
+}
+
+[data-theme="light"] .auth-theme-toggle {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+}

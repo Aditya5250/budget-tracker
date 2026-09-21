@@ -1,19 +1,18 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import GoogleSignInButton from "../components/auth/GoogleSignInButton";
 import {
   Wallet,
-  CheckCircle2,
-  Lock,
-  Mail,
-  User,
   Eye,
   EyeOff,
   Sparkles,
   Loader2,
   TrendingUp,
   ShieldCheck,
+  Sun,
+  Moon,
 } from "lucide-react";
 import "../styles/auth.css";
 
@@ -24,10 +23,20 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "dark");
 
   const { signup } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  function toggleTheme() {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -52,6 +61,17 @@ export default function Signup() {
 
   return (
     <div className="auth-wrapper">
+      {/* Floating Theme Toggle */}
+      <button
+        type="button"
+        className="auth-theme-toggle"
+        onClick={toggleTheme}
+        title={`Switch to ${theme === "dark" ? "Light" : "Dark"} mode`}
+        aria-label="Toggle Theme"
+      >
+        {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+      </button>
+
       <div className="auth-container">
         {/* Left Hero Marketing Panel */}
         <div className="auth-hero">
@@ -102,10 +122,19 @@ export default function Signup() {
         <div className="auth-form-card">
           <div className="auth-form-header">
             <h1 className="auth-form-title">Create Account</h1>
-            <p className="auth-form-subtitle">Start taking control of your financial freedom today.</p>
+            <p className="auth-form-subtitle">Get started with Google or email in seconds.</p>
           </div>
 
           {error && <div className="auth-error-alert">{error}</div>}
+
+          {/* Continue with Google */}
+          <div style={{ marginBottom: "20px" }}>
+            <GoogleSignInButton text="Sign up with Google" />
+          </div>
+
+          <div className="demo-login-divider">
+            <span>or create account with email</span>
+          </div>
 
           <form className="auth-form" onSubmit={handleSubmit}>
             <div className="form-group">

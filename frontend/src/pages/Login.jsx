@@ -1,19 +1,18 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import GoogleSignInButton from "../components/auth/GoogleSignInButton";
 import {
   Wallet,
-  CheckCircle2,
-  Lock,
-  Mail,
   Eye,
   EyeOff,
   Sparkles,
-  ArrowRight,
   Loader2,
   TrendingUp,
   ShieldCheck,
+  Sun,
+  Moon,
 } from "lucide-react";
 import "../styles/auth.css";
 
@@ -24,10 +23,20 @@ export default function Login() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [demoLoading, setDemoLoading] = useState(false);
+  const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "dark");
 
   const { login, signup } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  function toggleTheme() {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -57,12 +66,10 @@ export default function Login() {
     };
 
     try {
-      // Try login first
       await login({ email: demoCreds.email, password: demoCreds.password });
       addToast("Logged in as Demo Explorer!", "success");
       navigate("/dashboard");
     } catch (err) {
-      // If user doesn't exist, create demo account
       try {
         await signup(demoCreds);
         addToast("Created and logged into demo session!", "success");
@@ -77,6 +84,17 @@ export default function Login() {
 
   return (
     <div className="auth-wrapper">
+      {/* Floating Theme Toggle */}
+      <button
+        type="button"
+        className="auth-theme-toggle"
+        onClick={toggleTheme}
+        title={`Switch to ${theme === "dark" ? "Light" : "Dark"} mode`}
+        aria-label="Toggle Theme"
+      >
+        {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+      </button>
+
       <div className="auth-container">
         {/* Left Hero Marketing Panel */}
         <div className="auth-hero">
@@ -126,11 +144,20 @@ export default function Login() {
         {/* Right Form Card */}
         <div className="auth-form-card">
           <div className="auth-form-header">
-            <h1 className="auth-form-title">Sign in</h1>
-            <p className="auth-form-subtitle">Enter your credentials to access your financial dashboard.</p>
+            <h1 className="auth-form-title">Welcome Back</h1>
+            <p className="auth-form-subtitle">Sign in with Google or your credentials to continue.</p>
           </div>
 
           {error && <div className="auth-error-alert">{error}</div>}
+
+          {/* Continue with Google */}
+          <div style={{ marginBottom: "20px" }}>
+            <GoogleSignInButton text="Continue with Google" />
+          </div>
+
+          <div className="demo-login-divider">
+            <span>or sign in with email</span>
+          </div>
 
           <form className="auth-form" onSubmit={handleSubmit}>
             <div className="form-group">
@@ -186,7 +213,7 @@ export default function Login() {
 
           {/* 1-Click Demo Button */}
           <div className="demo-login-divider">
-            <span>or explore instantly</span>
+            <span>or instant exploration</span>
           </div>
 
           <button

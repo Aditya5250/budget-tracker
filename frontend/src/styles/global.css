@@ -64,19 +64,29 @@
   --bg-primary: #f8fafc;
   --bg-surface: #ffffff;
   --bg-surface-elevated: #f1f5f9;
-  --bg-surface-glass: rgba(255, 255, 255, 0.85);
-  --bg-surface-hover: rgba(0, 0, 0, 0.04);
-  --bg-card: rgba(255, 255, 255, 0.85);
-  --border-subtle: rgba(0, 0, 0, 0.06);
-  --border-card: rgba(0, 0, 0, 0.08);
+  --bg-surface-glass: rgba(255, 255, 255, 0.9);
+  --bg-surface-hover: rgba(0, 0, 0, 0.03);
+  --bg-card: #ffffff;
+  --border-subtle: #e2e8f0;
+  --border-card: #e2e8f0;
+  --border-focus: #6366f1;
   --text-main: #0f172a;
-  --text-muted: #475569;
-  --text-subtle: #94a3b8;
+  --text-muted: #334155;
+  --text-subtle: #64748b;
   --text-inverse: #ffffff;
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.08);
-  --shadow-glow: 0 0 25px rgba(99, 102, 241, 0.15);
+  --income: #059669;
+  --income-bg: rgba(5, 150, 105, 0.08);
+  --expense: #e11d48;
+  --expense-bg: rgba(225, 29, 72, 0.08);
+  --warning: #d97706;
+  --warning-bg: rgba(217, 119, 6, 0.08);
+  --info: #0284c7;
+  --info-bg: rgba(2, 132, 199, 0.08);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
+  --shadow-glow: 0 0 25px rgba(99, 102, 241, 0.12);
+  --shadow-ai: 0 0 25px rgba(99, 102, 241, 0.15);
 }
 
 /* Reset & Box Sizing */
@@ -95,6 +105,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
 }
 
 /* Ambient Radial Glow Background */
@@ -120,6 +131,14 @@ body::after {
   background: radial-gradient(circle, rgba(217, 70, 239, 0.06) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
+}
+
+[data-theme="light"] body::before {
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.05) 0%, transparent 70%);
+}
+
+[data-theme="light"] body::after {
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.04) 0%, transparent 70%);
 }
 
 /* Scrollbar */

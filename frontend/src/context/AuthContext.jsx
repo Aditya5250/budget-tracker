@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { loginApi, signupApi, getMeApi } from "../api/auth.api";
+import { loginApi, signupApi, getMeApi, googleAuthApi } from "../api/auth.api";
 
 const AuthContext = createContext(null);
 
@@ -66,6 +66,17 @@ export function AuthProvider({ children }) {
     return res;
   }
 
+  async function loginWithGoogle(profile) {
+    const data = await googleAuthApi(profile);
+    localStorage.setItem("token", data.token);
+    if (data.user) {
+      localStorage.setItem("user", JSON.stringify(data.user));
+      setUser(data.user);
+    }
+    setToken(data.token);
+    return data;
+  }
+
   function logout() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -82,6 +93,7 @@ export function AuthProvider({ children }) {
         loading,
         login,
         signup,
+        loginWithGoogle,
         logout,
       }}
     >

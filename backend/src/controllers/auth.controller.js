@@ -142,3 +142,61 @@ export async function getMe(req, res) {
     });
   }
 }
+
+/**
+ * Google OAuth sign in / sign up handler
+ * POST /api/auth/google
+ */
+export async function googleAuth(req, res) {
+  try {
+    const { email, name, googleId } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        error: "Google account email is required",
+      });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+
+    // 1. Check if user already exists
+    let result = await pool.query(
+      "SELECT id, name, email FROM users WHERE email = $1",
+      [cleanEmail]
+    );
+
+    let user;
+    if (result.rows.length === 0) {
+      // 2. Create user with a secure generated password hash
+      const randomSecret = Math.random().toString(36).slice(-10) + "Google#2026";
+      const passwordHash = await hashPassword(randomSecret);
+
+      const insertRes = await pool.query(
+        `INSERT INTO users (name, email, password_hash)
+         VALUES ($1, $2, $3)
+         RETURNING id, name, email`,
+        [name || cleanEmail.split("@")[0], cleanEmail, passwordHash]
+      );
+      user = insertRes.rows[0];
+    } else {
+      user = result.rows[0];
+    }
+
+    // 3. Issue JWT
+    const token = generateToken({ userId: user.id });
+
+    res.json({
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      },
+      token,
+    });
+  } catch (error) {
+    console.error("Google Auth error:", error.message);
+    res.status(500).json({
+      error: "Failed to authenticate with Google",
+    });
+  }
+}

@@ -10,6 +10,11 @@ export async function loginApi(data) {
   return res.data;
 }
 
+export async function googleAuthApi(data) {
+  const res = await api.post("/auth/google", data);
+  return res.data;
+}
+
 export async function getMeApi() {
   const res = await api.get("/auth/me");
   return res.data;
