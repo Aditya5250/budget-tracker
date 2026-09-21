@@ -1,86 +1,184 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { signupApi } from "../api/auth.api";
+import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
+import {
+  Wallet,
+  CheckCircle2,
+  Lock,
+  Mail,
+  User,
+  Eye,
+  EyeOff,
+  Sparkles,
+  Loader2,
+  TrendingUp,
+  ShieldCheck,
+} from "lucide-react";
 import "../styles/auth.css";
 
 export default function Signup() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const { signup } = useAuth();
+  const { addToast } = useToast();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  async function handleSubmit(e) {
     e.preventDefault();
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
 
     setError(null);
     setLoading(true);
 
     try {
-      await signupApi({ name, email, password });
-      navigate("/login");
+      await signup({ name, email, password });
+      addToast("Account created successfully! Welcome aboard.", "success");
+      navigate("/dashboard");
     } catch (err) {
-      setError(err?.response?.data?.error || "Signup failed");
+      setError(err?.response?.data?.error || "Registration failed. Email may already be in use.");
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
-    <div className="auth-layout">
-      <div className="auth-brand">
-        <h1>BudgetTracker</h1>
-        <p className="tagline">Build Better Money Habits</p>
+    <div className="auth-wrapper">
+      <div className="auth-container">
+        {/* Left Hero Marketing Panel */}
+        <div className="auth-hero">
+          <div>
+            <div className="auth-hero-brand">
+              <div className="brand-icon-wrapper">
+                <Wallet size={22} />
+              </div>
+              <span className="brand-title">AuraBudget</span>
+              <span className="brand-badge">AI</span>
+            </div>
 
-        <ul className="features">
-          <li>✓ Track income & expenses</li>
-          <li>✓ Understand spending patterns</li>
-          <li>✓ Stay financially disciplined</li>
-        </ul>
-      </div>
+            <h2 className="auth-hero-tagline">
+              Build effortless financial confidence.
+            </h2>
+            <p className="auth-hero-desc">
+              Join thousands who track smarter with automated AI budgeting, instant anomaly alerts, and personalized saving blueprints.
+            </p>
 
-      <div className="auth-page">
-        <h2>Create account</h2>
+            <ul className="auth-feature-list">
+              <li className="auth-feature-item">
+                <div className="auth-feature-icon">
+                  <Sparkles size={15} />
+                </div>
+                <span>Intelligent AI Financial Assistant on standby</span>
+              </li>
+              <li className="auth-feature-item">
+                <div className="auth-feature-icon">
+                  <TrendingUp size={15} />
+                </div>
+                <span>Visual 50/30/20 category budget health</span>
+              </li>
+              <li className="auth-feature-item">
+                <div className="auth-feature-icon">
+                  <ShieldCheck size={15} />
+                </div>
+                <span>Private, encrypted, and production hardened</span>
+              </li>
+            </ul>
+          </div>
 
-        <form onSubmit={handleSubmit}>
-          <input
-            placeholder="Full name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
+          <div className="auth-hero-footer">
+            <span>© 2026 Aura Budget AI. Built for modern financial discipline.</span>
+          </div>
+        </div>
 
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+        {/* Right Form Card */}
+        <div className="auth-form-card">
+          <div className="auth-form-header">
+            <h1 className="auth-form-title">Create Account</h1>
+            <p className="auth-form-subtitle">Start taking control of your financial freedom today.</p>
+          </div>
 
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          {error && <div className="auth-error-alert">{error}</div>}
 
-          {error && <p className="error">{error}</p>}
+          <form className="auth-form" onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label className="form-label">Full Name</label>
+              <div className="form-input-wrapper">
+                <input
+                  type="text"
+                  placeholder="e.g. Aditya Raj"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  autoFocus
+                />
+              </div>
+            </div>
 
-          <button type="submit" disabled={loading}>
-            {loading ? "Creating..." : "Create account"}
-          </button>
-        </form>
+            <div className="form-group">
+              <label className="form-label">Email Address</label>
+              <div className="form-input-wrapper">
+                <input
+                  type="email"
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+            </div>
 
-        <p style={{ marginTop: "12px", textAlign: "center" }}>
-          Already have an account?{" "}
-          <Link to="/login" style={{ color: "#3b82f6" }}>
-            Login
-          </Link>
-        </p>
+            <div className="form-group">
+              <label className="form-label">Password</label>
+              <div className="form-input-wrapper">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Min 6 characters"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={loading}
+              style={{ padding: "12px", width: "100%", marginTop: "4px" }}
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" /> Creating Account...
+                </>
+              ) : (
+                "Get Started Free"
+              )}
+            </button>
+          </form>
+
+          <p className="auth-switch-prompt">
+            Already have an account?
+            <Link to="/login" className="auth-switch-link">
+              Sign in
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

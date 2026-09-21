@@ -1,79 +1,219 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
+import {
+  Wallet,
+  CheckCircle2,
+  Lock,
+  Mail,
+  Eye,
+  EyeOff,
+  Sparkles,
+  ArrowRight,
+  Loader2,
+  TrendingUp,
+  ShieldCheck,
+} from "lucide-react";
 import "../styles/auth.css";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
 
-  const { login } = useAuth();
+  const { login, signup } = useAuth();
+  const { addToast } = useToast();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  async function handleSubmit(e) {
     e.preventDefault();
-
     setError(null);
     setLoading(true);
 
     try {
       await login({ email, password });
-      navigate("/dashboard"); // ✅ guaranteed redirect
+      addToast("Welcome back!", "success");
+      navigate("/dashboard");
     } catch (err) {
-      setError(err?.response?.data?.error || "Login failed");
+      setError(err?.response?.data?.error || "Invalid email or password");
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  // 1-Click Demo Login
+  async function handleDemoLogin() {
+    setDemoLoading(true);
+    setError(null);
+
+    const demoCreds = {
+      name: "Demo Explorer",
+      email: "demo@aurabudget.app",
+      password: "DemoPassword123!",
+    };
+
+    try {
+      // Try login first
+      await login({ email: demoCreds.email, password: demoCreds.password });
+      addToast("Logged in as Demo Explorer!", "success");
+      navigate("/dashboard");
+    } catch (err) {
+      // If user doesn't exist, create demo account
+      try {
+        await signup(demoCreds);
+        addToast("Created and logged into demo session!", "success");
+        navigate("/dashboard");
+      } catch (signupErr) {
+        setError("Demo login unavailable. Please create an account.");
+      }
+    } finally {
+      setDemoLoading(false);
+    }
+  }
 
   return (
-    <div className="auth-layout">
-      <div className="auth-brand">
-        <h1>BudgetTracker</h1>
-        <p className="tagline">Take Control Of Your Money</p>
+    <div className="auth-wrapper">
+      <div className="auth-container">
+        {/* Left Hero Marketing Panel */}
+        <div className="auth-hero">
+          <div>
+            <div className="auth-hero-brand">
+              <div className="brand-icon-wrapper">
+                <Wallet size={22} />
+              </div>
+              <span className="brand-title">AuraBudget</span>
+              <span className="brand-badge">AI</span>
+            </div>
 
-        <ul className="features">
-          <li>✓ Track income & expenses</li>
-          <li>✓ Clear financial overview</li>
-          <li>✓ Simple, fast & secure</li>
-        </ul>
-      </div>
+            <h2 className="auth-hero-tagline">
+              Master your finances with intelligent AI clarity.
+            </h2>
+            <p className="auth-hero-desc">
+              Track income, manage category budgets, detect anomalies, and consult your personal AI financial advisor in real-time.
+            </p>
 
-      <div className="auth-page">
-        <h2>Login</h2>
+            <ul className="auth-feature-list">
+              <li className="auth-feature-item">
+                <div className="auth-feature-icon">
+                  <Sparkles size={15} />
+                </div>
+                <span>Natural language transaction parsing</span>
+              </li>
+              <li className="auth-feature-item">
+                <div className="auth-feature-icon">
+                  <TrendingUp size={15} />
+                </div>
+                <span>Interactive cashflow & category breakdown charts</span>
+              </li>
+              <li className="auth-feature-item">
+                <div className="auth-feature-icon">
+                  <ShieldCheck size={15} />
+                </div>
+                <span>Secure JWT authentication & PostgreSQL storage</span>
+              </li>
+            </ul>
+          </div>
 
-        <form onSubmit={handleSubmit}>
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+          <div className="auth-hero-footer">
+            <span>© 2026 Aura Budget AI. Built for modern financial discipline.</span>
+          </div>
+        </div>
 
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+        {/* Right Form Card */}
+        <div className="auth-form-card">
+          <div className="auth-form-header">
+            <h1 className="auth-form-title">Sign in</h1>
+            <p className="auth-form-subtitle">Enter your credentials to access your financial dashboard.</p>
+          </div>
 
-          {error && <p className="error">{error}</p>}
+          {error && <div className="auth-error-alert">{error}</div>}
 
-          <button type="submit" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
+          <form className="auth-form" onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label className="form-label">Email Address</label>
+              <div className="form-input-wrapper">
+                <input
+                  type="email"
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Password</label>
+              <div className="form-input-wrapper">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={loading || demoLoading}
+              style={{ padding: "12px", width: "100%", marginTop: "4px" }}
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" /> Signing in...
+                </>
+              ) : (
+                "Sign In"
+              )}
+            </button>
+          </form>
+
+          {/* 1-Click Demo Button */}
+          <div className="demo-login-divider">
+            <span>or explore instantly</span>
+          </div>
+
+          <button
+            type="button"
+            className="btn btn-ai"
+            onClick={handleDemoLogin}
+            disabled={loading || demoLoading}
+            style={{ width: "100%", padding: "12px" }}
+          >
+            {demoLoading ? (
+              <>
+                <Loader2 size={16} className="animate-spin" /> Preparing Demo...
+              </>
+            ) : (
+              <>
+                <Sparkles size={16} /> 1-Click Live Demo Guest Login
+              </>
+            )}
           </button>
-        </form>
 
-        <p style={{ marginTop: "12px", textAlign: "center" }}>
-          Don’t have an account?{" "}
-          <Link to="/signup" style={{ color: "#3b82f6" }}>
-            Sign up
-          </Link>
-        </p>
+          <p className="auth-switch-prompt">
+            Don't have an account?
+            <Link to="/signup" className="auth-switch-link">
+              Create an account
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

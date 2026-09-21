@@ -1,26 +1,23 @@
-// src/server.js
+import dotenv from "dotenv";
+import app from "./app.js";
+import { initDB } from "./config/db.js";
 
-import dotenv from 'dotenv'
-import app from './app.js'
-import pool from './config/db.js'
+dotenv.config();
 
-dotenv.config()
-
-const PORT = process.env.PORT || 4000
+const PORT = process.env.PORT || 4000;
 
 async function startServer() {
   try {
-    // Test database connection
-    const result = await pool.query('SELECT NOW()')
-    console.log('✅ Database connected at:', result.rows[0].now)
+    // Initialize database pool & schemas
+    await initDB();
 
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`)
-    })
+      console.log(`🚀 Modern AI Budget Tracker Backend running on port ${PORT}`);
+    });
   } catch (error) {
-    console.error('❌ Database connection failed:', error.message)
-    process.exit(1)
+    console.error("❌ Failed to start server:", error.message);
+    process.exit(1);
   }
 }
 
-startServer()
+startServer();
