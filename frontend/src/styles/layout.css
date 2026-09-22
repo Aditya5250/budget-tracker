@@ -980,6 +980,43 @@
   padding-bottom: 6px;
 }
 
+/* User Bubble Meta: Crisp, High-Contrast Visibility */
+.chat-bubble.user .chat-bubble-meta {
+  color: rgba(255, 255, 255, 0.88);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.chat-bubble.user .chat-bubble-meta svg {
+  color: #ffffff;
+  stroke: #ffffff;
+}
+
+.chat-bubble.user .chat-sender-name {
+  color: #ffffff;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.chat-bubble.user .chat-timestamp {
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+}
+
+/* AI Bubble Meta */
+.chat-bubble.ai .chat-bubble-meta {
+  color: var(--text-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.chat-bubble.ai .chat-sender-name {
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+.chat-bubble.ai .chat-timestamp {
+  color: var(--text-subtle);
+}
+
 .ai-model-tag {
   display: inline-flex;
   align-items: center;

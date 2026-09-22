@@ -234,10 +234,14 @@ export default function AiAdvisorDrawer({ isOpen, onClose, userName = "there" })
             <div key={m.id} className={`chat-bubble ${m.sender} ${m.isError ? "ai-error-bubble" : ""}`}>
               {/* Message Header Meta */}
               <div className="chat-bubble-meta">
-                <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                  {m.sender === "ai" ? <Bot size={12} color="#818cf8" /> : <User size={12} />}
-                  <span style={{ fontWeight: 600 }}>{m.sender === "ai" ? "Aura AI" : "You"}</span>
-                  <span style={{ opacity: 0.6 }}>• {m.time}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  {m.sender === "ai" ? (
+                    <Bot size={13} color="#818cf8" />
+                  ) : (
+                    <User size={13} color="currentColor" />
+                  )}
+                  <span className="chat-sender-name">{m.sender === "ai" ? "Aura AI" : "You"}</span>
+                  <span className="chat-timestamp">• {m.time}</span>
                 </div>
 
                 {m.sender === "ai" && !m.isError && (
