@@ -6,7 +6,7 @@ export async function parseTransactionWithAi(text) {
 }
 
 export async function askAiAdvisor(question, history = []) {
-  const res = await api.post("/ai/advisor", { question, history });
+  const res = await api.post("/ai/advisor", { question, history }, { timeout: 65000 });
   return res.data;
 }
 

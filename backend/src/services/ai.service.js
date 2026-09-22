@@ -147,9 +147,9 @@ async function callGeminiContents(contents, systemInstruction = "") {
           contents,
           config: systemInstruction
             ? {
-                systemInstruction,
-                temperature: 0.7,
-              }
+              systemInstruction,
+              temperature: 0.7,
+            }
             : { temperature: 0.7 },
         });
 
@@ -288,40 +288,38 @@ Cash Flow Overview:
 
 Top Spending Categories:
 ${(categoryBreakdown || [])
-  .slice(0, 6)
-  .map((c) => `  * ${c.name}: ${currSymbol}${c.total}`)
-  .join("\n") || "  (No expenses recorded yet)"}
+      .slice(0, 6)
+      .map((c) => `  * ${c.name}: ${currSymbol}${c.total}`)
+      .join("\n") || "  (No expenses recorded yet)"}
 
 Active Budget Caps:
 ${(budgets || [])
-  .map((b) => `  * ${b.category_name}: Limit ${currSymbol}${b.monthly_limit}`)
-  .join("\n") || "  (No budget limits set yet)"}
+      .map((b) => `  * ${b.category_name}: Limit ${currSymbol}${b.monthly_limit}`)
+      .join("\n") || "  (No budget limits set yet)"}
 
 Recent Transactions (last 15):
 ${(recentTransactions || [])
-  .slice(0, 15)
-  .map((t) => `  * [${t.occurred_at ? new Date(t.occurred_at).toLocaleDateString() : "Recent"}] ${t.type.toUpperCase()}: ${currSymbol}${t.amount} (${t.category || "Other"}) - "${t.note || "No description"}"`)
-  .join("\n") || "  (No transactions recorded yet)"}
+      .slice(0, 15)
+      .map((t) => `  * [${t.occurred_at ? new Date(t.occurred_at).toLocaleDateString() : "Recent"}] ${t.type.toUpperCase()}: ${currSymbol}${t.amount} (${t.category || "Other"}) - "${t.note || "No description"}"`)
+      .join("\n") || "  (No transactions recorded yet)"}
 ----------------------------------------`;
 
   if (apiKey && apiKey !== "your_gemini_api_key_here") {
-    const systemPrompt = `You are "Aura", an empathetic, highly analytical, and inspiring AI Financial Advisor and Budget Strategist embedded in the AuraBudget AI platform.
-Your mission is to provide deeply personalized, actionable, and mathematically grounded financial guidance based strictly on the user's real-time financial snapshot.
+    const systemPrompt = `You are "Aura", a world-class, empathetic, and sophisticated personal AI Financial Advisor embedded in AuraBudget.
+Your mission is to provide crystal-clear, modern, and motivating financial guidance based strictly on the user's real-time financial snapshot.
 
-Formatting Guidelines for Rich UI Rendering:
-1. Markdown Formatting:
-   - Use bold (**text**) for figures, metrics, and key takeaways.
-   - Use structured bullet points (- ) or numbered lists (1. ) for step-by-step action plans.
-   - When comparing categories or providing budget recommendations, use Markdown tables with headers (| Category | Current | Recommended Limit |).
-   - Use Markdown blockquotes (> 💡 **Aura Strategy:** ...) for high-impact money-saving tips or rule-of-thumb principles.
-   - Use inline code (\`${currSymbol}500\`) for quick budget thresholds or calculations.
-2. Voice & Tone:
-   - Warm, motivating, disciplined, and conversational.
-   - Never sound clinical or intimidating. Emphasize proactive progress and celebrating small wins.
-   - Always reference their actual numbers from the financial snapshot (e.g. their specific top category, savings rate, or recent purchases).
-3. Brevity & Actionability:
-   - Keep responses focused (typically 2-4 structured paragraphs or bulleted sections).
-   - Conclude with a clear, single next action the user can take right now.`;
+CRITICAL FORMATTING & STYLE RULES (NO SYMBOL CLUTTER):
+1. Clean & Modern Readability:
+   - NEVER use markdown heading hashtags (do NOT use '#', '##', or '###'). Use clean plain titles with emojis instead.
+   - NEVER use markdown pipe tables (| col | col |). Do not output pipe syntax. Use clean bullet points or key-value lines instead.
+   - Do NOT wrap every single phrase in double asterisks '**'. Write naturally and use bolding sparingly—only for primary amounts or category names.
+   - Use clean, modern bullet points (• or 🔹 or ✨) with clear line spacing.
+   - Keep answers visually clean, professional, and readable in under 30 seconds (2 to 3 concise paragraphs or bulleted takeaways).
+2. Natural Conversational Replies:
+   - If the user says "thank you", "thanks", "thanx", "hello", "hi", or other conversational remarks, respond warmly and conversationally in 1-2 friendly sentences—do NOT overwhelm them with an unsolicited financial audit.
+3. Personalized Data-Driven Guidance:
+   - When asked a financial question, directly cite their actual numbers (income, expenses, category spending, or recent transactions) with ${currSymbol}.
+   - Conclude with a single, high-impact recommendation the user can do right now.`;
 
     // Build multi-turn contents array
     const contents = [];
@@ -345,7 +343,7 @@ Formatting Guidelines for Rich UI Rendering:
 
 User Question: "${question}"
 
-Provide specific, motivating, and beautifully formatted financial advice:`;
+Provide specific, motivating, clean, and beautifully structured financial advice (no '#' symbols, no pipe tables):`;
 
     contents.push({
       role: "user",
@@ -363,37 +361,48 @@ Provide specific, motivating, and beautifully formatted financial advice:`;
     }
   }
 
-  // Intelligent local fallback response with rich Markdown formatting
+  // Conversational check for local fallback
+  const isGreeting = /^(thanks|thank you|thanx|thx|hi|hello|hey|good morning|good evening|yo)\b/i.test(question.trim());
+  if (isGreeting) {
+    return {
+      reply: `You're very welcome! I'm here anytime you want to review your spending, set new savings goals, or check on your budgets. What would you like to explore next? 😊`,
+      engine: "local-advisor",
+      model: "conversational",
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  // Intelligent local fallback response with clean modern styling (no '#' symbols)
   let fallbackReply = "";
   if (totalIncome === 0 && totalExpense === 0) {
-    fallbackReply = `### Welcome to Aura Financial AI! 👋\n\n` +
-      `You haven't logged any transactions yet for this period. To unleash personalized financial advice:\n\n` +
-      `- **Log Your Income**: Add your monthly salary, freelance earnings, or dividends.\n` +
-      `- **Track Daily Expenses**: Use the **Quick AI Add** bar to quickly record groceries, dining, or bills.\n` +
-      `- **Set Category Budgets**: Establish spending limits so I can alert you before leaks happen.\n\n` +
-      `> 💡 **Aura Tip:** Start with your last 3 days of expenses to immediately see category breakdown!`;
+    fallbackReply = `Welcome to Aura Financial AI! 👋\n\n` +
+      `You haven't logged any transactions yet for this period. To unlock personalized financial advice:\n\n` +
+      `• Log Your Income: Add your monthly salary, freelance earnings, or dividends.\n` +
+      `• Track Daily Expenses: Use the Quick AI Add bar to quickly record groceries, dining, or bills.\n` +
+      `• Set Category Budgets: Establish spending limits so I can alert you before leaks happen.\n\n` +
+      `💡 Aura Tip: Start by logging your last 3 days of expenses to immediately see your cashflow breakdown!`;
   } else if (netSavings < 0) {
     const topCat = categoryBreakdown?.[0]?.name || "Discretionary Spending";
     const topAmt = categoryBreakdown?.[0]?.total || 0;
-    fallbackReply = `### ⚠️ Spending Velocity Alert\n\n` +
-      `Your total spending (**${currSymbol}${totalExpense}**) currently exceeds your income (**${currSymbol}${totalIncome}**) by **${currSymbol}${Math.abs(netSavings)}**.\n\n` +
-      `#### Key Observations:\n` +
-      `- **Highest Outflow**: **${topCat}** accounts for **${currSymbol}${topAmt}**.\n` +
-      `- **Immediate Action**: Pause non-essential purchases in ${topCat} for the remainder of the billing cycle.\n` +
-      `- **Recovery Target**: Aim to reduce discretionary spending by 15% to restore a positive cash buffer.\n\n` +
-      `> 💡 **Aura Strategy:** Consider setting a strict budget cap on **${topCat}** in your Budgets tab.`;
+    fallbackReply = `⚠️ Spending Velocity Alert\n\n` +
+      `Your total spending (${currSymbol}${totalExpense}) currently exceeds your income (${currSymbol}${totalIncome}) by ${currSymbol}${Math.abs(netSavings)}.\n\n` +
+      `Key Observations:\n` +
+      `• Highest Outflow: ${topCat} accounts for ${currSymbol}${topAmt}.\n` +
+      `• Immediate Action: Pause non-essential purchases in ${topCat} for the remainder of the billing cycle.\n` +
+      `• Recovery Target: Aim to reduce discretionary spending by 15% to restore a positive cash buffer.\n\n` +
+      `💡 Aura Strategy: Consider setting a strict budget cap on ${topCat} in your Budgets tab.`;
   } else {
     const topCat = categoryBreakdown?.[0]?.name || "Routine Expenses";
     const topAmt = categoryBreakdown?.[0]?.total || 0;
-    fallbackReply = `### 🎉 Strong Financial Momentum\n\n` +
-      `You have accumulated **${currSymbol}${netSavings}** in net savings with a solid **${savingsRate}% savings rate**!\n\n` +
-      `#### Financial Snapshot:\n` +
-      `- **Top Outflow**: **${topCat}** at **${currSymbol}${topAmt}**.\n` +
-      `- **Surplus Allocation**: We recommend splitting your **${currSymbol}${netSavings}** surplus:\n` +
-      `  - **50% (${currSymbol}${(netSavings * 0.5).toFixed(0)})** into emergency reserves or high-yield savings.\n` +
-      `  - **30% (${currSymbol}${(netSavings * 0.3).toFixed(0)})** into long-term investments (SIPs/Index funds).\n` +
-      `  - **20% (${currSymbol}${(netSavings * 0.2).toFixed(0)})** for planned lifestyle rewards.\n\n` +
-      `> 💡 **Aura Strategy:** Maintain this pace! Tracking small recurring expenses will help you push toward a 30% savings milestone.`;
+    fallbackReply = `🎉 Strong Financial Momentum\n\n` +
+      `You have accumulated ${currSymbol}${netSavings} in net savings with a solid ${savingsRate}% savings rate!\n\n` +
+      `Financial Snapshot:\n` +
+      `• Top Outflow: ${topCat} at ${currSymbol}${topAmt}.\n` +
+      `• Surplus Allocation: We recommend splitting your ${currSymbol}${netSavings} surplus:\n` +
+      `  - 50% (${currSymbol}${(netSavings * 0.5).toFixed(0)}) into emergency reserves or high-yield savings.\n` +
+      `  - 30% (${currSymbol}${(netSavings * 0.3).toFixed(0)}) into long-term investments (SIPs/Index funds).\n` +
+      `  - 20% (${currSymbol}${(netSavings * 0.2).toFixed(0)}) for planned lifestyle rewards.\n\n` +
+      `💡 Aura Strategy: Maintain this pace! Tracking small recurring expenses will help you push toward a 30% savings milestone.`;
   }
 
   return {

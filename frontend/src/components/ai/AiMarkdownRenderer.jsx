@@ -3,11 +3,18 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 /**
- * Custom Markdown renderer tailored for Aura Financial AI responses:
- * Beautifully formats tables, bullet points, budget calculations, and advice callouts.
+ * Modern, clean Markdown & text renderer for Aura Financial AI:
+ * Removes awkward markdown artifacts (excessive hashes, raw pipe syntax)
+ * and formats advice with clean modern cards, pills, and typography.
  */
 export default function AiMarkdownRenderer({ content }) {
   if (!content) return null;
+
+  // Clean and normalize text: strip raw markdown hash symbols at line starts
+  const sanitizedContent = content
+    .replace(/^#{1,6}\s+/gm, "") // remove leading #, ##, ### from lines
+    .replace(/\*{3,}/g, "**")    // normalize excessive asterisks
+    .trim();
 
   return (
     <div className="ai-markdown-body">
@@ -22,19 +29,19 @@ export default function AiMarkdownRenderer({ content }) {
           th: ({ node, ...props }) => <th className="ai-markdown-th" {...props} />,
           td: ({ node, ...props }) => <td className="ai-markdown-td" {...props} />,
           blockquote: ({ node, children, ...props }) => (
-            <blockquote className="ai-markdown-quote" {...props}>
+            <div className="ai-markdown-quote" {...props}>
               <div className="quote-accent-bar" />
               <div className="quote-content">{children}</div>
-            </blockquote>
+            </div>
           ),
           code: ({ node, inline, children, ...props }) => (
-            <code className="ai-markdown-inline-code" {...props}>
+            <span className="ai-markdown-inline-code" {...props}>
               {children}
-            </code>
+            </span>
           ),
-          h1: ({ node, ...props }) => <h3 className="ai-markdown-h1" {...props} />,
-          h2: ({ node, ...props }) => <h4 className="ai-markdown-h2" {...props} />,
-          h3: ({ node, ...props }) => <h5 className="ai-markdown-h3" {...props} />,
+          h1: ({ node, children, ...props }) => <div className="ai-markdown-h1" {...props}>{children}</div>,
+          h2: ({ node, children, ...props }) => <div className="ai-markdown-h2" {...props}>{children}</div>,
+          h3: ({ node, children, ...props }) => <div className="ai-markdown-h3" {...props}>{children}</div>,
           ul: ({ node, ...props }) => <ul className="ai-markdown-ul" {...props} />,
           ol: ({ node, ...props }) => <ol className="ai-markdown-ol" {...props} />,
           li: ({ node, ...props }) => <li className="ai-markdown-li" {...props} />,
@@ -49,7 +56,7 @@ export default function AiMarkdownRenderer({ content }) {
           ),
         }}
       >
-        {content}
+        {sanitizedContent}
       </ReactMarkdown>
     </div>
   );

@@ -6,7 +6,6 @@ import {
   X,
   Sparkles,
   User,
-  Loader2,
   Copy,
   Check,
   RotateCcw,
@@ -14,8 +13,17 @@ import {
   ExternalLink,
   ChevronRight,
   ShieldCheck,
+  RefreshCw,
+  AlertCircle,
 } from "lucide-react";
 import AiMarkdownRenderer from "./AiMarkdownRenderer";
+
+const LOADING_STAGES = [
+  "Analyzing your income and expenses...",
+  "Evaluating spending velocity & category caps...",
+  "Aura is crafting personalized recommendations...",
+  "Connecting with cloud services... almost ready ✨",
+];
 
 export default function AiAdvisorDrawer({ isOpen, onClose, userName = "there" }) {
   const [messages, setMessages] = useState([
@@ -24,12 +32,13 @@ export default function AiAdvisorDrawer({ isOpen, onClose, userName = "there" })
       sender: "ai",
       engine: "gemini",
       model: "gemini-3.6-flash",
-      text: `Hello ${userName}! 👋 I'm **Aura**, your personal AI Financial Advisor powered by **Google Gemini**.\n\nI have real-time access to your income, expenses, category breakdowns, and active budget limits. Ask me anything about optimizing cash flow, discovering spending leaks, or building wealth!`,
+      text: `Hello ${userName}! 👋 I'm Aura, your personal AI Financial Advisor powered by Google Gemini.\n\nI have real-time access to your income, expenses, category breakdowns, and active budget limits. Ask me anything about optimizing cash flow, discovering spending leaks, or building wealth!`,
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     },
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingStage, setLoadingStage] = useState(0);
   const [aiStatus, setAiStatus] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
   const [showKeyInfoModal, setShowKeyInfoModal] = useState(false);
@@ -43,6 +52,22 @@ export default function AiAdvisorDrawer({ isOpen, onClose, userName = "there" })
     "Give me 3 personalized tips to boost my savings",
   ];
 
+  // Dynamic cycling loader
+  useEffect(() => {
+    let timer;
+    if (loading) {
+      setLoadingStage(0);
+      let current = 0;
+      timer = setInterval(() => {
+        current = (current + 1);
+        if (current < LOADING_STAGES.length) {
+          setLoadingStage(current);
+        }
+      }, 2800);
+    }
+    return () => clearInterval(timer);
+  }, [loading]);
+
   // Fetch Gemini status on open
   useEffect(() => {
     if (isOpen) {
@@ -55,7 +80,7 @@ export default function AiAdvisorDrawer({ isOpen, onClose, userName = "there" })
     if (isOpen) {
       chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages]);
+  }, [messages, loading]);
 
   async function checkStatus() {
     try {
@@ -77,11 +102,14 @@ export default function AiAdvisorDrawer({ isOpen, onClose, userName = "there" })
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
 
-    // Prepare multi-turn history for Gemini
-    const historyPayload = messages.slice(-8).map((m) => ({
-      sender: m.sender,
-      text: m.text,
-    }));
+    // Prepare multi-turn history for Gemini (strip error messages)
+    const historyPayload = messages
+      .filter((m) => !m.isError)
+      .slice(-8)
+      .map((m) => ({
+        sender: m.sender,
+        text: m.text,
+      }));
 
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
@@ -94,7 +122,7 @@ export default function AiAdvisorDrawer({ isOpen, onClose, userName = "there" })
         sender: "ai",
         text: res.reply || "I analyzed your budget and found several optimization opportunities.",
         engine: res.engine || "gemini",
-        model: res.model || "gemini-2.5-flash",
+        model: res.model || "gemini-3.6-flash",
         hint: res.hint || null,
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
@@ -105,8 +133,10 @@ export default function AiAdvisorDrawer({ isOpen, onClose, userName = "there" })
         {
           id: String(Date.now() + 1),
           sender: "ai",
-          text: "### Consultation Interruption ⚠️\n\nI had difficulty processing your financial snapshot. Please verify your connection or try asking again.",
+          text: "I experienced a temporary connection delay while consulting your ledger. Please tap retry to ask again.",
           engine: "system",
+          isError: true,
+          failedQuestion: question,
           time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         },
       ]);
@@ -127,7 +157,7 @@ export default function AiAdvisorDrawer({ isOpen, onClose, userName = "there" })
         id: String(Date.now()),
         sender: "ai",
         engine: "gemini",
-        model: aiStatus?.model || "gemini-2.5-flash",
+        model: aiStatus?.model || "gemini-3.6-flash",
         text: `Chat cleared! Ready for your next financial question, ${userName}. What would you like to explore?`,
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       },
@@ -201,7 +231,7 @@ export default function AiAdvisorDrawer({ isOpen, onClose, userName = "there" })
         {/* Message Thread */}
         <div className="ai-chat-messages">
           {messages.map((m) => (
-            <div key={m.id} className={`chat-bubble ${m.sender}`}>
+            <div key={m.id} className={`chat-bubble ${m.sender} ${m.isError ? "ai-error-bubble" : ""}`}>
               {/* Message Header Meta */}
               <div className="chat-bubble-meta">
                 <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
@@ -210,7 +240,7 @@ export default function AiAdvisorDrawer({ isOpen, onClose, userName = "there" })
                   <span style={{ opacity: 0.6 }}>• {m.time}</span>
                 </div>
 
-                {m.sender === "ai" && (
+                {m.sender === "ai" && !m.isError && (
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     {m.engine === "gemini" && (
                       <span className="ai-model-tag">
@@ -232,7 +262,7 @@ export default function AiAdvisorDrawer({ isOpen, onClose, userName = "there" })
                 )}
               </div>
 
-              {/* Message Content: Rich Markdown for AI, Clean Text for User */}
+              {/* Message Content */}
               {m.sender === "ai" ? (
                 <div className="ai-message-content">
                   <AiMarkdownRenderer content={m.text} />
@@ -242,6 +272,17 @@ export default function AiAdvisorDrawer({ isOpen, onClose, userName = "there" })
                       <span>{m.hint}</span>
                     </div>
                   )}
+
+                  {/* 1-Click Retry Button for connection delays */}
+                  {m.isError && (
+                    <button
+                      className="ai-retry-btn"
+                      onClick={() => handleSend(m.failedQuestion)}
+                      disabled={loading}
+                    >
+                      <RefreshCw size={12} /> Retry Question
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{m.text}</div>
@@ -249,19 +290,27 @@ export default function AiAdvisorDrawer({ isOpen, onClose, userName = "there" })
             </div>
           ))}
 
-          {/* Typing / Analyzing Loader */}
+          {/* Modern State-of-the-Art Pulsating Dynamic Loader */}
           {loading && (
-            <div className="chat-bubble ai ai-loading-bubble">
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <Loader2 size={16} className="animate-spin" color="#818cf8" />
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-main)" }}>
-                    Aura is consulting Gemini AI...
+            <div className="chat-bubble ai ai-modern-loading-card">
+              <div className="ai-loading-header">
+                <div className="ai-pulse-dot-container">
+                  <span className="ai-pulse-core" />
+                  <span className="ai-pulse-halo" />
+                </div>
+                <div className="ai-loading-text-col">
+                  <span className="ai-loading-title">
+                    {LOADING_STAGES[loadingStage]}
                   </span>
-                  <span style={{ fontSize: "11px", color: "var(--text-subtle)" }}>
-                    Analyzing transactions, budget thresholds, and cash flow trends
+                  <span className="ai-loading-subtle">
+                    Aura AI • Gemini 3.6 Flash
                   </span>
                 </div>
+              </div>
+              <div className="ai-skeleton-wave">
+                <div className="ai-skeleton-line w-85" />
+                <div className="ai-skeleton-line w-65" />
+                <div className="ai-skeleton-line w-40" />
               </div>
             </div>
           )}
@@ -323,7 +372,7 @@ export default function AiAdvisorDrawer({ isOpen, onClose, userName = "there" })
 
               <div style={{ padding: "16px 20px", fontSize: "13px", lineHeight: "1.6", color: "var(--text-muted)" }}>
                 <p style={{ marginBottom: "12px" }}>
-                  Aura Financial AI leverages Google Gemini (<strong style={{ color: "var(--text-main)" }}>gemini-2.5-flash</strong> and <strong style={{ color: "var(--text-main)" }}>gemini-1.5-flash</strong>) for conversational financial intelligence.
+                  Aura Financial AI leverages Google Gemini (<strong style={{ color: "var(--text-main)" }}>gemini-3.6-flash</strong> and <strong style={{ color: "var(--text-main)" }}>gemini-3.8-flash</strong>) for clean, conversational financial intelligence.
                 </p>
 
                 <div style={{ background: "var(--bg-surface-elevated)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)", padding: "12px", marginBottom: "14px" }}>
@@ -332,7 +381,7 @@ export default function AiAdvisorDrawer({ isOpen, onClose, userName = "there" })
                     Status: {isGeminiActive ? "Connected & Active" : "Offline Rule-based Mode"}
                   </div>
                   <div style={{ fontSize: "12px", color: "var(--text-subtle)" }}>
-                    {aiStatus?.message || "Check your backend .env file to enable or configure."}
+                    {aiStatus?.message || "Check your backend environment variables to enable or configure."}
                   </div>
                 </div>
 
@@ -341,7 +390,7 @@ export default function AiAdvisorDrawer({ isOpen, onClose, userName = "there" })
                 </div>
                 <ol style={{ paddingLeft: "18px", margin: "0 0 14px 0", fontSize: "12.5px" }}>
                   <li>
-                    Get a free API key at{" "}
+                    Get an API key at{" "}
                     <a
                       href="https://aistudio.google.com/"
                       target="_blank"
@@ -351,9 +400,9 @@ export default function AiAdvisorDrawer({ isOpen, onClose, userName = "there" })
                       Google AI Studio <ExternalLink size={11} />
                     </a>
                   </li>
-                  <li>Open your <code>backend/.env</code> file.</li>
+                  <li>In your deployment environment (e.g. Render Dashboard &rarr; Environment), set:</li>
                   <li>
-                    Set <code>GEMINI_API_KEY=your_key_here</code> and restart your backend.
+                    <code>GEMINI_API_KEY=your_key_here</code>
                   </li>
                 </ol>
 
