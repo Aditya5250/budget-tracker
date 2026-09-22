@@ -34,9 +34,9 @@ A full-stack, AI-powered personal financial management web application designed 
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: React 19, Vite, React Router v7, Axios, Lucide React, Canvas Confetti.
-- **Backend**: Node.js (ES Modules), Express 5, PostgreSQL (`pg`), JSON Web Tokens (`jsonwebtoken`), Bcrypt.
-- **AI Engine**: Google Gemini API (`gemini-1.5-flash`) with intelligent heuristic NLP fallback.
+- **Frontend**: React 19, Vite, React Router v7, React Markdown & Remark GFM, Axios, Lucide React, Canvas Confetti.
+- **Backend**: Node.js (ES Modules), Express 5, `@google/genai` SDK, PostgreSQL (`pg`), JSON Web Tokens (`jsonwebtoken`), Bcrypt.
+- **AI Engine**: Google Gemini AI (`gemini-2.5-flash` / `gemini-1.5-flash`) with multi-turn memory, rich Markdown formatting, and intelligent heuristic NLP fallback.
 - **Deployment**: Vercel (Frontend), Render / Neon / Supabase (Backend & PostgreSQL).
 
 ---
@@ -48,11 +48,11 @@ A full-stack, AI-powered personal financial management web application designed 
 cd backend
 npm install
 
-# (Optional) Configure environment variables in backend/.env
+# Configure environment variables in backend/.env:
 # PORT=4000
-# DATABASE_URL=postgresql://user:password@localhost:5432/budget_tracker
+# DATABASE_URL=postgresql://user:password@localhost:5432/budget_tracker (optional, defaults to resilient in-memory store)
 # JWT_SECRET=your_secret_key
-# GEMINI_API_KEY=your_gemini_api_key
+# GEMINI_API_KEY=your_gemini_api_key (get a free key from https://aistudio.google.com/)
 
 npm start
 ```

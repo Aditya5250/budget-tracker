@@ -4,11 +4,13 @@ import {
   advisorChat,
   getInsights,
   getBudgetRecommendations,
+  getAiStatus,
 } from "../controllers/ai.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
+router.get("/status", authMiddleware, getAiStatus);
 router.post("/parse-transaction", authMiddleware, parseTransaction);
 router.post("/advisor", authMiddleware, advisorChat);
 router.get("/insights", authMiddleware, getInsights);

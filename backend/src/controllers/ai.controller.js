@@ -4,7 +4,22 @@ import {
   getFinancialAdvice,
   generateSpendingInsights,
   getRecommendedBudgets,
+  checkGeminiStatus,
 } from "../services/ai.service.js";
+
+/**
+ * GET /api/ai/status
+ * Check Gemini API connectivity and configuration
+ */
+export async function getAiStatus(req, res) {
+  try {
+    const status = await checkGeminiStatus();
+    res.json(status);
+  } catch (error) {
+    console.error("AI Status error:", error.message);
+    res.status(500).json({ error: "Failed to retrieve AI status" });
+  }
+}
 
 /**
  * POST /api/ai/parse-transaction
@@ -35,7 +50,7 @@ export async function parseTransaction(req, res) {
 
 /**
  * POST /api/ai/advisor
- * Financial advisor conversational agent
+ * Financial advisor conversational agent with rich context & multi-turn memory
  */
 export async function advisorChat(req, res) {
   try {
@@ -46,7 +61,7 @@ export async function advisorChat(req, res) {
       return res.status(400).json({ error: "Question is required" });
     }
 
-    // Retrieve user transactions for financial context
+    // 1. Retrieve all user transactions for cashflow calculation
     const txRes = await pool.query(
       `SELECT t.id, t.type, t.amount, t.occurred_at, c.name AS category
        FROM transactions t
@@ -75,6 +90,33 @@ export async function advisorChat(req, res) {
       .map(([name, total]) => ({ name, total }))
       .sort((a, b) => b.total - a.total);
 
+    // 2. Retrieve recent 15 transactions with notes for specific contextual answers
+    const recentTxRes = await pool.query(
+      `SELECT t.id, t.type, t.amount, t.note, t.occurred_at, c.name AS category
+       FROM transactions t
+       LEFT JOIN categories c ON t.category_id = c.id
+       WHERE t.user_id = $1
+       ORDER BY t.occurred_at DESC
+       LIMIT 15`,
+      [userId]
+    );
+
+    // 3. Retrieve user active budgets
+    const budgetRes = await pool.query(
+      `SELECT b.id, b.monthly_limit, c.name AS category_name
+       FROM budgets b
+       LEFT JOIN categories c ON b.category_id = c.id
+       WHERE b.user_id = $1`,
+      [userId]
+    );
+
+    // 4. Retrieve user currency preference
+    const userRes = await pool.query(
+      `SELECT currency FROM users WHERE id = $1`,
+      [userId]
+    );
+    const currency = userRes.rows[0]?.currency || "INR";
+
     const advice = await getFinancialAdvice({
       question,
       context: {
@@ -83,6 +125,9 @@ export async function advisorChat(req, res) {
         netSavings,
         savingsRate,
         categoryBreakdown,
+        recentTransactions: recentTxRes.rows,
+        budgets: budgetRes.rows,
+        currency,
       },
       history,
     });

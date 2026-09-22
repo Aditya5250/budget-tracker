@@ -19,3 +19,8 @@ export async function getAiBudgetRecommendations() {
   const res = await api.get("/ai/budget-recommendations");
   return res.data;
 }
+
+export async function getAiStatus() {
+  const res = await api.get("/ai/status");
+  return res.data;
+}

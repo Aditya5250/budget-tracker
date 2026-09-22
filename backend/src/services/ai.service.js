@@ -1,7 +1,35 @@
 import dotenv from "dotenv";
+import { GoogleGenAI } from "@google/genai";
 dotenv.config();
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
+/**
+ * Dynamically resolve the Gemini API key (from environment or runtime)
+ */
+export function getGeminiApiKey() {
+  return (process.env.GEMINI_API_KEY || "").trim();
+}
+
+/**
+ * Check connectivity and configuration of Gemini API
+ */
+export async function checkGeminiStatus() {
+  const apiKey = getGeminiApiKey();
+  if (!apiKey || apiKey === "your_gemini_api_key_here") {
+    return {
+      configured: false,
+      active: false,
+      model: "local-advisor",
+      message: "No GEMINI_API_KEY configured in environment. Running in offline rule-based mode.",
+    };
+  }
+
+  return {
+    configured: true,
+    active: true,
+    model: "gemini-2.5-flash",
+    message: "Google Gemini API connected and ready.",
+  };
+}
 
 /**
  * Natural language rule-based fallback parser
@@ -89,46 +117,85 @@ function localRuleBasedParse(text, categories = []) {
 }
 
 /**
- * Call Google Gemini API
+ * Call Google Gemini API supporting both @google/genai SDK and REST fallback
+ * with automatic fallback between gemini-2.5-flash, gemini-2.0-flash, and gemini-1.5-flash.
  */
-async function callGemini(prompt, systemInstruction = "") {
-  if (!GEMINI_API_KEY) return null;
+async function callGeminiContents(contents, systemInstruction = "") {
+  const apiKey = getGeminiApiKey();
+  if (!apiKey || apiKey === "your_gemini_api_key_here") return null;
 
+  const candidateModels = [
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+  ];
+
+  // 1. Try official @google/genai SDK first
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-    const payload = {
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: prompt }],
-        },
-      ],
-    };
+    const ai = new GoogleGenAI({ apiKey });
+    for (const model of candidateModels) {
+      try {
+        const response = await ai.models.generateContent({
+          model,
+          contents,
+          config: systemInstruction
+            ? {
+                systemInstruction,
+                temperature: 0.7,
+              }
+            : { temperature: 0.7 },
+        });
 
-    if (systemInstruction) {
-      payload.systemInstruction = {
-        parts: [{ text: systemInstruction }],
-      };
+        const text = response.text;
+        if (text && text.trim()) {
+          return { text: text.trim(), model };
+        }
+      } catch (err) {
+        console.warn(`[Gemini SDK] ${model} attempt failed:`, err.message);
+      }
     }
-
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.warn("Gemini API error:", response.status, errText);
-      return null;
-    }
-
-    const data = await response.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
-  } catch (err) {
-    console.warn("Error calling Gemini API:", err.message);
-    return null;
+  } catch (sdkInitErr) {
+    console.warn("[Gemini SDK] SDK initialization failed, trying REST fallback:", sdkInitErr.message);
   }
+
+  // 2. Direct REST fallback
+  for (const model of candidateModels) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const payload = {
+        contents: Array.isArray(contents)
+          ? contents
+          : [{ role: "user", parts: [{ text: String(contents) }] }],
+      };
+
+      if (systemInstruction) {
+        payload.systemInstruction = {
+          parts: [{ text: systemInstruction }],
+        };
+      }
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text && text.trim()) {
+          return { text: text.trim(), model };
+        }
+      } else {
+        const errText = await response.text();
+        console.warn(`[Gemini REST] ${model} returned ${response.status}:`, errText.slice(0, 150));
+      }
+    } catch (restErr) {
+      console.warn(`[Gemini REST] error calling ${model}:`, restErr.message);
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -140,8 +207,9 @@ export async function parseTransactionWithAI(text, categories = []) {
   }
 
   const categoryNames = categories.map((c) => c.name).join(", ");
+  const apiKey = getGeminiApiKey();
 
-  if (GEMINI_API_KEY) {
+  if (apiKey && apiKey !== "your_gemini_api_key_here") {
     const prompt = `You are a financial AI parser. Parse the following user text into a structured budget transaction:
 "${text}"
 
@@ -157,10 +225,10 @@ Output STRICTLY valid JSON with no markdown formatting, backticks, or other text
   "occurredAt": "ISO date string (e.g. YYYY-MM-DDTHH:mm:ss.sssZ)"
 }`;
 
-    const rawResponse = await callGemini(prompt);
-    if (rawResponse) {
+    const geminiRes = await callGeminiContents([{ role: "user", parts: [{ text: prompt }] }]);
+    if (geminiRes && geminiRes.text) {
       try {
-        const cleaned = rawResponse.replace(/```json/g, "").replace(/```/g, "").trim();
+        const cleaned = geminiRes.text.replace(/```json/g, "").replace(/```/g, "").trim();
         const parsed = JSON.parse(cleaned);
         const matchedCat = categories.find(
           (c) => c.name.toLowerCase() === (parsed.category || "").toLowerCase()
@@ -174,7 +242,7 @@ Output STRICTLY valid JSON with no markdown formatting, backticks, or other text
           note: parsed.note || text,
           occurredAt: parsed.occurredAt || new Date().toISOString(),
           confidence: 0.98,
-          engine: "gemini-1.5-flash",
+          engine: geminiRes.model,
         };
       } catch (err) {
         console.warn("Failed to parse Gemini JSON output, using local fallback:", err.message);
@@ -186,67 +254,147 @@ Output STRICTLY valid JSON with no markdown formatting, backticks, or other text
 }
 
 /**
- * 2. AI Financial Advisor Chat
+ * 2. AI Financial Advisor Chat with Multi-turn Memory & Rich Formatting
  */
-export async function getFinancialAdvice({ question, context, history = [] }) {
-  const { totalIncome, totalExpense, netSavings, savingsRate, categoryBreakdown } = context;
+export async function getFinancialAdvice({ question, context = {}, history = [] }) {
+  const {
+    totalIncome = 0,
+    totalExpense = 0,
+    netSavings = 0,
+    savingsRate = 0,
+    categoryBreakdown = [],
+    recentTransactions = [],
+    budgets = [],
+    currency = "INR",
+  } = context;
+
+  const currSymbol = currency === "USD" ? "$" : "₹";
+  const apiKey = getGeminiApiKey();
 
   const contextSummary = `
-User Financial Summary for Current Period:
-- Total Income: ₹${totalIncome}
-- Total Expense: ₹${totalExpense}
-- Net Savings: ₹${netSavings} (Savings Rate: ${savingsRate}%)
-- Top Spending Categories:
+--- REAL-TIME USER FINANCIAL SNAPSHOT ---
+Cash Flow Overview:
+- Total Income: ${currSymbol}${totalIncome}
+- Total Expenses: ${currSymbol}${totalExpense}
+- Net Savings: ${currSymbol}${netSavings}
+- Savings Rate: ${savingsRate}%
+
+Top Spending Categories:
 ${(categoryBreakdown || [])
-  .slice(0, 5)
-  .map((c) => `  * ${c.name}: ₹${c.total}`)
-  .join("\n")}
-`;
+  .slice(0, 6)
+  .map((c) => `  * ${c.name}: ${currSymbol}${c.total}`)
+  .join("\n") || "  (No expenses recorded yet)"}
 
-  if (GEMINI_API_KEY) {
-    const systemPrompt = `You are "Aura", an empathetic, highly skilled financial advisor and budget coach.
-Your job is to provide specific, data-driven, practical, and motivating financial advice based strictly on the user's spending data.
-Keep answers concise, structured with bullet points, and friendly. Avoid excessive jargon.
-Use currency symbol ₹ or $ appropriately.`;
+Active Budget Caps:
+${(budgets || [])
+  .map((b) => `  * ${b.category_name}: Limit ${currSymbol}${b.monthly_limit}`)
+  .join("\n") || "  (No budget limits set yet)"}
 
-    const fullPrompt = `${contextSummary}
+Recent Transactions (last 15):
+${(recentTransactions || [])
+  .slice(0, 15)
+  .map((t) => `  * [${t.occurred_at ? new Date(t.occurred_at).toLocaleDateString() : "Recent"}] ${t.type.toUpperCase()}: ${currSymbol}${t.amount} (${t.category || "Other"}) - "${t.note || "No description"}"`)
+  .join("\n") || "  (No transactions recorded yet)"}
+----------------------------------------`;
+
+  if (apiKey && apiKey !== "your_gemini_api_key_here") {
+    const systemPrompt = `You are "Aura", an empathetic, highly analytical, and inspiring AI Financial Advisor and Budget Strategist embedded in the AuraBudget AI platform.
+Your mission is to provide deeply personalized, actionable, and mathematically grounded financial guidance based strictly on the user's real-time financial snapshot.
+
+Formatting Guidelines for Rich UI Rendering:
+1. Markdown Formatting:
+   - Use bold (**text**) for figures, metrics, and key takeaways.
+   - Use structured bullet points (- ) or numbered lists (1. ) for step-by-step action plans.
+   - When comparing categories or providing budget recommendations, use Markdown tables with headers (| Category | Current | Recommended Limit |).
+   - Use Markdown blockquotes (> 💡 **Aura Strategy:** ...) for high-impact money-saving tips or rule-of-thumb principles.
+   - Use inline code (\`${currSymbol}500\`) for quick budget thresholds or calculations.
+2. Voice & Tone:
+   - Warm, motivating, disciplined, and conversational.
+   - Never sound clinical or intimidating. Emphasize proactive progress and celebrating small wins.
+   - Always reference their actual numbers from the financial snapshot (e.g. their specific top category, savings rate, or recent purchases).
+3. Brevity & Actionability:
+   - Keep responses focused (typically 2-4 structured paragraphs or bulleted sections).
+   - Conclude with a clear, single next action the user can take right now.`;
+
+    // Build multi-turn contents array
+    const contents = [];
+
+    // Incorporate recent chat history (last 6 turns)
+    if (Array.isArray(history) && history.length > 0) {
+      for (const item of history.slice(-6)) {
+        const role = (item.sender === "ai" || item.role === "model") ? "model" : "user";
+        const text = item.text || item.content || "";
+        if (text.trim()) {
+          contents.push({
+            role,
+            parts: [{ text: text.trim() }],
+          });
+        }
+      }
+    }
+
+    // Append latest prompt with fresh financial context
+    const currentPrompt = `${contextSummary}
 
 User Question: "${question}"
 
-Provide actionable, friendly advice:`;
+Provide specific, motivating, and beautifully formatted financial advice:`;
 
-    const advice = await callGemini(fullPrompt, systemPrompt);
-    if (advice) {
+    contents.push({
+      role: "user",
+      parts: [{ text: currentPrompt }],
+    });
+
+    const geminiRes = await callGeminiContents(contents, systemPrompt);
+    if (geminiRes && geminiRes.text) {
       return {
-        reply: advice,
-        engine: "gemini-1.5-flash",
+        reply: geminiRes.text,
+        engine: "gemini",
+        model: geminiRes.model,
+        timestamp: new Date().toISOString(),
       };
     }
   }
 
-  // Intelligent local fallback response
-  let fallbackReply = `Here is your financial overview:\n\n`;
+  // Intelligent local fallback response with rich Markdown formatting
+  let fallbackReply = "";
   if (totalIncome === 0 && totalExpense === 0) {
-    fallbackReply += `You haven't recorded any transactions yet for this period. Try adding your recent income and routine expenses to unlock deep insights!`;
+    fallbackReply = `### Welcome to Aura Financial AI! 👋\n\n` +
+      `You haven't logged any transactions yet for this period. To unleash personalized financial advice:\n\n` +
+      `- **Log Your Income**: Add your monthly salary, freelance earnings, or dividends.\n` +
+      `- **Track Daily Expenses**: Use the **Quick AI Add** bar to quickly record groceries, dining, or bills.\n` +
+      `- **Set Category Budgets**: Establish spending limits so I can alert you before leaks happen.\n\n` +
+      `> 💡 **Aura Tip:** Start with your last 3 days of expenses to immediately see category breakdown!`;
   } else if (netSavings < 0) {
-    const topCategory = categoryBreakdown?.[0]?.name || "discretionary spending";
-    fallbackReply += `⚠️ **Spending Alert**: Your expenses (₹${totalExpense}) currently exceed your income (₹${totalIncome}) by ₹${Math.abs(
-      netSavings
-    )}.\n\n` +
-      `- **Focus Area**: Your highest expenditure is currently in **${topCategory}**.\n` +
-      `- **Action Item**: Aim to cap non-essential purchases for the rest of the month and set a budget limit on ${topCategory}.\n` +
-      `- **Next Step**: Build an emergency buffer by saving at least 15% of upcoming income.`;
+    const topCat = categoryBreakdown?.[0]?.name || "Discretionary Spending";
+    const topAmt = categoryBreakdown?.[0]?.total || 0;
+    fallbackReply = `### ⚠️ Spending Velocity Alert\n\n` +
+      `Your total spending (**${currSymbol}${totalExpense}**) currently exceeds your income (**${currSymbol}${totalIncome}**) by **${currSymbol}${Math.abs(netSavings)}**.\n\n` +
+      `#### Key Observations:\n` +
+      `- **Highest Outflow**: **${topCat}** accounts for **${currSymbol}${topAmt}**.\n` +
+      `- **Immediate Action**: Pause non-essential purchases in ${topCat} for the remainder of the billing cycle.\n` +
+      `- **Recovery Target**: Aim to reduce discretionary spending by 15% to restore a positive cash buffer.\n\n` +
+      `> 💡 **Aura Strategy:** Consider setting a strict budget cap on **${topCat}** in your Budgets tab.`;
   } else {
-    const topCategory = categoryBreakdown?.[0]?.name || "expenses";
-    fallbackReply += `🎉 **Great Financial Health**: You have saved ₹${netSavings} this month with a solid **${savingsRate}% savings rate**!\n\n` +
-      `- **Top Spend**: Your largest expenditure is **${topCategory}** (₹${categoryBreakdown?.[0]?.total || 0}).\n` +
-      `- **Recommendation**: Allocate 50% of your surplus (₹${(netSavings * 0.5).toFixed(0)}) toward long-term investments or emergency funds.\n` +
-      `- **Optimization**: Review recurring subscription charges to unlock another 5-10% in monthly savings.`;
+    const topCat = categoryBreakdown?.[0]?.name || "Routine Expenses";
+    const topAmt = categoryBreakdown?.[0]?.total || 0;
+    fallbackReply = `### 🎉 Strong Financial Momentum\n\n` +
+      `You have accumulated **${currSymbol}${netSavings}** in net savings with a solid **${savingsRate}% savings rate**!\n\n` +
+      `#### Financial Snapshot:\n` +
+      `- **Top Outflow**: **${topCat}** at **${currSymbol}${topAmt}**.\n` +
+      `- **Surplus Allocation**: We recommend splitting your **${currSymbol}${netSavings}** surplus:\n` +
+      `  - **50% (${currSymbol}${(netSavings * 0.5).toFixed(0)})** into emergency reserves or high-yield savings.\n` +
+      `  - **30% (${currSymbol}${(netSavings * 0.3).toFixed(0)})** into long-term investments (SIPs/Index funds).\n` +
+      `  - **20% (${currSymbol}${(netSavings * 0.2).toFixed(0)})** for planned lifestyle rewards.\n\n` +
+      `> 💡 **Aura Strategy:** Maintain this pace! Tracking small recurring expenses will help you push toward a 30% savings milestone.`;
   }
 
   return {
     reply: fallbackReply,
     engine: "local-advisor",
+    model: "heuristic-rules",
+    hint: !apiKey ? "Tip: Add GEMINI_API_KEY to backend/.env to activate Google Gemini AI generative answers." : null,
+    timestamp: new Date().toISOString(),
   };
 }
 
