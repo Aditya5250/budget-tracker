@@ -10,10 +10,14 @@ import remarkGfm from "remark-gfm";
 export default function AiMarkdownRenderer({ content }) {
   if (!content) return null;
 
-  // Clean and normalize text: strip raw markdown hash symbols at line starts
-  const sanitizedContent = content
+  // Clean and normalize text:
+  // 1. Strip raw markdown hash symbols at line starts (#, ##, ###)
+  // 2. Normalize excessive asterisks
+  // 3. Ensure markdown tables have empty lines before and after for proper GFM rendering
+  let sanitizedContent = content
     .replace(/^#{1,6}\s+/gm, "") // remove leading #, ##, ### from lines
     .replace(/\*{3,}/g, "**")    // normalize excessive asterisks
+    .replace(/([^\n])\n(\|.+?\|)\n/g, "$1\n\n$2\n") // ensure newline before table
     .trim();
 
   return (
