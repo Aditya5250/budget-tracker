@@ -1,5 +1,10 @@
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 import { GoogleGenAI } from "@google/genai";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 dotenv.config();
 
 /**
@@ -26,7 +31,7 @@ export async function checkGeminiStatus() {
   return {
     configured: true,
     active: true,
-    model: "gemini-2.5-flash",
+    model: "gemini-3.6-flash",
     message: "Google Gemini API connected and ready.",
   };
 }
@@ -125,8 +130,10 @@ async function callGeminiContents(contents, systemInstruction = "") {
   if (!apiKey || apiKey === "your_gemini_api_key_here") return null;
 
   const candidateModels = [
+    "gemini-3.6-flash",
+    "gemini-3.8-flash",
+    "gemini-flash-latest",
     "gemini-2.5-flash",
-    "gemini-2.0-flash",
     "gemini-1.5-flash",
   ];
 

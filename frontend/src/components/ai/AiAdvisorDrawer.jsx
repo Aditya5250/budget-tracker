@@ -23,7 +23,7 @@ export default function AiAdvisorDrawer({ isOpen, onClose, userName = "there" })
       id: "initial",
       sender: "ai",
       engine: "gemini",
-      model: "gemini-2.5-flash",
+      model: "gemini-3.6-flash",
       text: `Hello ${userName}! 👋 I'm **Aura**, your personal AI Financial Advisor powered by **Google Gemini**.\n\nI have real-time access to your income, expenses, category breakdowns, and active budget limits. Ask me anything about optimizing cash flow, discovering spending leaks, or building wealth!`,
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     },
@@ -152,7 +152,7 @@ export default function AiAdvisorDrawer({ isOpen, onClose, userName = "there" })
                 <span style={{ fontWeight: 700, fontSize: "15px" }}>Aura Financial AI</span>
                 {isGeminiActive ? (
                   <span className="ai-sparkle-badge" title="Powered by Google Gemini">
-                    <Sparkles size={11} /> Gemini 2.5
+                    <Sparkles size={11} /> {aiStatus?.model?.replace("-flash", "") || "Gemini 3.6"}
                   </span>
                 ) : (
                   <span className="ai-status-badge-offline" onClick={() => setShowKeyInfoModal(true)}>
